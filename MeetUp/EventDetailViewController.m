@@ -60,9 +60,6 @@
     //create the string
     NSMutableString *html = [NSMutableString stringWithString: self.selectedEvent.eventDescription];
     NSLog(@"%@", html);
-    
-    //continue building the string
-    [html appendString:@"</body></html>"];
 
     //pass the string to the webview
     [self.descriptionWebView loadHTMLString:[html description] baseURL:nil];
@@ -90,8 +87,20 @@
     cell.textLabel.text = comment[@"comment"];
     cell.detailTextLabel.text = comment[@"member_name"];
     
-    NSDate *time = [NSDate dateWithTimeIntervalSince1970:[comment[@"time"] intValue]];
-    cell.timeLabel.text = [NSString stringWithFormat:@"%@", time];
+    
+    NSNumber *timeInString = comment[@"time"];
+    NSInteger timeInSeconds = timeInString.integerValue;
+    
+    NSDate *date = [NSDate dateWithTimeIntervalSinceReferenceDate:timeInSeconds];
+    
+    NSDateFormatter *formatter = [[NSDateFormatter alloc]init];
+    [formatter setDateFormat:@"hh:mm:ss a"];
+    
+    NSString *dateString = [formatter stringFromDate:date];
+    
+    cell.timeLabel.text = [NSString stringWithFormat:@"%@", dateString];
+    
+    
     
     return cell;
 }
