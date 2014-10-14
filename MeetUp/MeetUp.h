@@ -16,5 +16,7 @@
 @property NSNumber *rsvpCount;
 @property NSString *hostGroupInfo;
 @property NSString *eventDescription;
+@property NSString *linkToEventPage;
+@property NSString *groupID;
 
 @end

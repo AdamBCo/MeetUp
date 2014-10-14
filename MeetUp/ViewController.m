@@ -10,9 +10,11 @@
 #import "MeetUp.h"
 #import "EventDetailViewController.h"
 
-@interface ViewController () <UITableViewDataSource, UITableViewDelegate>
+@interface ViewController () <UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate>
 @property NSMutableArray *eventsArray;
 @property (weak, nonatomic) IBOutlet UITableView *eventsTableView;
+@property (weak, nonatomic) IBOutlet UISearchBar *eventSearchBar;
+@property NSString *searchItem;
 
 @end
 
@@ -21,14 +23,24 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.eventsArray = [NSMutableArray array];
+    self.searchItem = @"mobile";
+    [self makeAURLRequestToMeetUp];
     
-    NSURL *url = [NSURL URLWithString:@"https://api.meetup.com/2/open_events.json?zip=60604&text=mobile&time=,1w&key=477d1928246a4e162252547b766d3c6d"];
+
+}
+
+-(void)makeAURLRequestToMeetUp{
+
+    NSString *firstPartOfURL = @"https://api.meetup.com/2/open_events.json?zip=60604&text=";
+    NSString *secondPartOfURL = @"&time=,1w&key=477d1928246a4e162252547b766d3c6d";
+    
+    
+    NSString *urlString = [[firstPartOfURL stringByAppendingString:self.searchItem] stringByAppendingString:secondPartOfURL];
+    
+    NSURL *url = [NSURL URLWithString:urlString];
     NSURLRequest *request = [NSURLRequest requestWithURL:url];
     [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-//        NSString *jsonString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-//        NSLog(@"%@",jsonString);
         NSError *jsonError = nil;
-        
         NSDictionary *parsedResults = [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonError];
         NSArray *results = [parsedResults valueForKey:@"results"];
         
@@ -37,9 +49,9 @@
             MeetUp *meetUp = [[MeetUp alloc] init];
             meetUp.name = [result objectForKey:@"name"];
             meetUp.address = [result objectForKey:@"venue"];
+            meetUp.linkToEventPage = [result objectForKey:@"event_url"];
             meetUp.eventDescription = [result objectForKey:@"description"];
-//            NSLog(@"%@",meetUp.eventDescription);
-            
+            NSLog(@"%@",meetUp.linkToEventPage);
             
             NSNumber *rSVP = [result objectForKey:@"yes_rsvp_count"];
             if (rSVP != nil) {
@@ -57,6 +69,8 @@
             }
             
             NSDictionary *group = [result objectForKey:@"group"];
+            meetUp.groupID = [group objectForKey:@"id"];
+            
             NSString *groupName = [group objectForKey:@"name"];
             if (groupName != nil) {
                 meetUp.hostGroupInfo = [group objectForKey:@"name"];
@@ -73,6 +87,17 @@
     
 
 }
+
+-(void)searchBarSearchButtonClicked:(UISearchBar *)searchBar{
+    self.searchItem = self.eventSearchBar.text;
+    self.eventsArray = [NSMutableArray array];
+    [self makeAURLRequestToMeetUp];
+    [self.eventSearchBar resignFirstResponder];
+    [self.eventsTableView reloadData];
+    
+}
+
+
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(UITableViewCell *)cell
 {
